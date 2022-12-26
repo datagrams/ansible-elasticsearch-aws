@@ -1,0 +1,74 @@
+- name: install dependencies
+  apt:
+    name:
+      - apt-transport-https
+      - openjdk-11-jdk
+    update_cache: yes
+
+- name: install elasticsearch repo key
+  apt_key:
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    keyring: /usr/share/keyrings/elasticsearch-keyring.gpg
+
+- name: add elasticsearch repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main"
+    state: present
+
+- name: install elasticsearch
+  apt:
+    name: elasticsearch
+    update_cache: yes
+
+
+- name: set security limits
+  pam_limits:
+    domain: elasticsearch
+    limit_type: '-'
+    limit_item: nofile
+    value: 65535
+
+- name: create elasticsearch.service.d directory
+  file:
+    path: /etc/systemd/system/elasticsearch.service.d
+    state: directory
+
+- name: copy elasticsearch override service
+  copy:
+    src: files/override.conf
+    dest: /etc/systemd/system/elasticsearch.service.d/override.conf
+
+- name: reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: disable swap
+  command: swapoff -a
+
+- name: set vm.max_map_count=262144
+  sysctl:
+    name: vm.max_map_count
+    value: '262144'
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: enable elasticsearch service
+  service:
+    name: elasticsearch
+    enabled: true
+
+- name: render elasticsearch.yml
+  template:
+    src: files/elasticsearch.yml.j2
+    dest: /etc/elasticsearch/elasticsearch.yml
+
+- name: copy jvm.options
+  copy:
+    src: files/jvm.options
+    dest: /etc/elasticsearch/jvm.options
+
+- name: start elasticsearch service
+  service:
+    name: elasticsearch
+    state: restarted

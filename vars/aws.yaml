@@ -1,0 +1,3 @@
+region: eu-central-1
+aws_profile: pini
+ansible_user: ubuntu

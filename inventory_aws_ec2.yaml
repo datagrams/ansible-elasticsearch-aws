@@ -1,0 +1,11 @@
+plugin: aws_ec2
+regions:
+  - "eu-central-1"
+aws_profile: "pini"
+filters:
+  instance-state-name : running
+  tag:Fun:
+    "elasticsearch"
+strict: False
+hostnames:
+  - network-interface.association.public-ip

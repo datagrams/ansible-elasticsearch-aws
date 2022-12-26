@@ -1,0 +1,7 @@
+- name: provision nodes
+  hosts: all
+  become: true
+  vars_files:
+    - vars/aws.yaml
+  roles:
+    - provision
